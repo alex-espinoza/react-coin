@@ -1,4 +1,7 @@
 import React from 'react';
+import Loading from './Loading';
+import { API_URL } from '../../config';
+import { handleResponse } from '../../helpers';
 import './Search.css';
 
 class Search extends React.Component {
@@ -7,43 +10,54 @@ class Search extends React.Component {
 
     this.state = {
       searchQuery: '',
-      firstName: '',
+      loading: false
     }
 
-    this.handleSubmit = this.handleSubmit.bind(this);
     this.handleChange = this.handleChange.bind(this);
   }
 
-  handleSubmit(event) {
-    event.preventDefault();
-
-    console.log(this.state);
-  }
-
   handleChange(event) {
-    const inputName = event.target.name;
-    const inputValue  = event.target.value;
+    const searchQuery  = event.target.value;
 
-    // Surrounding input name in brackets lets us not have to hard code value check in if statement
-    // and prevents creation of long conditionals
-    this.setState({
-      [inputName]: inputValue,
-    })
+    this.setState({ searchQuery });
 
-    //if (inputName === 'searchQuery') {
-    //  this.setState({ searchQuery: inputValue });
-    //} else if (inputName === 'firstName') {
-    //  this.setState({ firstName: inputValue });
-    //}
+    // If search query doesn't exist, do not send request to server
+    if (!searchQuery) {
+      return '';
+    }
+
+    this.setState({ loading: true });
+
+    fetch(`${API_URL}/autocomplete?searchQuery=${searchQuery}`)
+      .then(handleResponse)
+      .then((result) => {
+        this.setState({ loading: false });
+      });
   }
 
   render() {
+    const { loading } = this.state;
+
     return (
-      <form onSubmit={this.handleSubmit}>
-        <input name="searchQuery" onChange={this.handleChange} />
-        <input name="firstName" onChange={this.handleChange} />
-        <button>Submit</button>
-      </form>
+      <div className="Search">
+        <span className="Search-icon" />
+        <input
+          className="Search-input"
+          type="text"
+          placeholder="Currency Name"
+          onChange={this.handleChange}
+        />
+
+        {loading &&
+          <div className="Search-loading">
+            <Loading
+              width='12px'
+              height='12px'
+            />
+          </div>
+        }
+      </div>
+
     )
   }
 }
